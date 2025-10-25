@@ -1,6 +1,6 @@
 # Gil Yair Yamin - 207027053
 
-Disclosure, chatGPT was used to create this readme file.
+Disclosure, chatGPT was used to create this readme file after I finished the code myself.
 
 # 🐦 Cassandra Birds Tracker
 
@@ -113,57 +113,3 @@ This will:
 4. Save results and traces into:
    - `result_txt_<timestamp>.txt`
    - `track_select_<timestamp>.txt`
-
----
-
-## 📊 Example Workflow
-
-1. **Start Cassandra locally**:
-   ```bash
-   cassandra -f
-   ```
-
-2. **Run the client script** to populate data:
-   ```bash
-   python cassandraBirdsClient.py
-   ```
-
-3. **Run the tracker script** to monitor birds:
-   ```bash
-   python cassandraBirdsTracker.py
-   ```
-
-4. Check generated text files in your working directory for query results and trace logs.
-
----
-
-## 🧠 Notes
-
-- Both scripts use `tqdm` for progress visualization.  
-- All queries use `ConsistencyLevel.QUORUM` to ensure reliable reads/writes.  
-- Default consistency and replication are suitable for local testing, not production.  
-- You can modify the `.env` file to point to a real Cassandra cluster.
-
----
-
-## 🪶 Example Output Files
-
-```
-result_txt_2025-10-26_01.00.00.txt
-track_select_2025-10-26_01.00.00.txt
-trace_insert_2025-10-26_01.00.00.txt
-```
-
-Each line represents a record or trace event generated during simulation and tracking.
-
----
-
-## ✅ Summary
-
-| Script | Purpose | Output |
-|--------|----------|--------|
-| **cassandraBirdsClient.py** | Simulate and insert bird movement data | `trace_insert_*.txt` |
-| **cassandraBirdsTracker.py** | Query and trace bird data | `result_txt_*.txt`, `track_select_*.txt` |
-| **.env** | Configuration for Cassandra & timing | — |
-| **requirements.txt** | Dependency list | — |
-
