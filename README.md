@@ -7,17 +7,20 @@ Disclosure, ChatGPT was used to create this readme file after I finished the cod
 This project simulates and tracks the movement of birds using a **Cassandra database**.  
 It includes two main Python scripts:
 
-- `cassandraBirdsClient.py` — simulates bird location updates and inserts them into Cassandra.  
+- `cassandraBirdsClient.py` — simulates bird location updates and inserts them into Cassandra.
 - `cassandraBirdsTracker.py` — periodically queries and traces birds’ latest locations.
 
 ## ⚙️ Prerequisites
+
 ### 1. Install Cassandra
+
 You must have **Apache Cassandra** installed and running locally or remotely.
 
 - Default contact point: `localhost`
 - Default port: `9042`
 
 ### 2. Install Python dependencies
+
 Use a virtual environment if possible.
 
 ```bash
@@ -25,6 +28,7 @@ pip install -r requirements.txt
 ```
 
 The dependencies are:
+
 - `python-dotenv` — loads environment variables from `.env`
 - `cassandra-driver` — Python driver for Cassandra
 
@@ -47,29 +51,29 @@ PERIOD_FOR_TRACKING_IN_SECONDS=60
 NUMBER_OF_TRACKING_CYCLES=2
 ```
 
-- **KEYSPACE** — Cassandra keyspace name  
-- **TABLE** — Table to store bird data  
-- **CONTACT_POINTS** — Comma-separated list of Cassandra node IPs or hostnames  
-- **PORT** — Cassandra connection port  
+- **KEYSPACE** — Cassandra keyspace name
+- **TABLE** — Table to store bird data
+- **CONTACT_POINTS** — Comma-separated list of Cassandra node IPs or hostnames
+- **PORT** — Cassandra connection port
 
-- **PERIOD_FOR_UPDATE_IN_SECONDS** — Interval between insert updates. 
+- **PERIOD_FOR_UPDATE_IN_SECONDS** — Interval between insert updates.
 - **NUMBER_OF_UPDATE_CYCLES** — Number of insert iterations.
 - **NUMBER_OF_BIRDS_TO_SIMULATE** — Number of birds to simulate.
 
 - **PERIOD_FOR_TRACKING_IN_SECONDS** — Interval between tracking cycles.
 - **NUMBER_OF_TRACKING_CYCLES** — Number of tracking iterations.
 
-
 ## 🧩 Script 1: cassandraBirdsClient.py (Data Generator)
 
 This script simulates bird movement and writes GPS data into Cassandra.\
-Notice: each update cycle does an update *on all birds*. So if we have 10 birds and 2 cycles, it will do 20 updates overall.
+Notice: each update cycle does an update _on all birds_. So if we have 10 birds and 2 cycles, it will do 20 updates overall.
 
 ### Features
-- Creates keyspace and table if not existing  
-- Simulates random bird motion (latitude/longitude drift)  
-- Inserts position updates with timestamps (`TimeUUID`)  
-- Logs query traces for one selected bird  
+
+- Creates keyspace and table if not existing
+- Simulates random bird motion (latitude/longitude drift)
+- Inserts position updates with timestamps (`TimeUUID`)
+- Logs query traces for one selected bird
 
 ### Usage
 
@@ -78,12 +82,14 @@ python cassandraBirdsClient.py
 ```
 
 This will:
-1. Connect to Cassandra (using `.env` parameters)  
-2. Create a keyspace and table (`birds_locations_by_date`) if they don’t exist  
-3. Insert new randomized location data for multiple birds  
+
+1. Connect to Cassandra (using `.env` parameters)
+2. Create a keyspace and table (`birds_locations_by_date`) if they don’t exist
+3. Insert new randomized location data for multiple birds
 4. Save tracing information to a log file named `trace_insert_<timestamp>.txt`
 
 Example log snippet:
+
 ```
 34 - Parsing insert statement
 78 - Sending mutation message
@@ -95,10 +101,11 @@ Example log snippet:
 This script periodically queries bird data from Cassandra to simulate real-time tracking.
 
 ### Features
-- Queries distinct bird IDs from Cassandra  
-- Fetches the latest location data per bird  
-- Performs tracing for a single “target” bird  
-- Logs query and trace data into timestamped result files  
+
+- Queries distinct bird IDs from Cassandra
+- Fetches the latest location data per bird
+- Performs tracing for a single “target” bird
+- Logs query and trace data into timestamped result files
 
 ### Usage
 
@@ -107,9 +114,10 @@ python cassandraBirdsTracker.py
 ```
 
 This will:
-1. Connect to Cassandra  
-2. Retrieve bird IDs  
-3. Loop through tracking cycles, fetching bird locations every `PERIOD_FOR_TRACKING_IN_SECONDS`  
+
+1. Connect to Cassandra
+2. Retrieve bird IDs
+3. Loop through tracking cycles, fetching bird locations every `PERIOD_FOR_TRACKING_IN_SECONDS`
 4. Save results and traces into:
    - `result_txt_<timestamp>.txt`
    - `track_select_<timestamp>.txt`
