@@ -1,6 +1,6 @@
 # Gil Yair Yamin - 207027053
 
-Disclosure, chatGPT was used to create this readme file after I finished the code myself.
+Disclosure, ChatGPT was used to create this readme file after I finished the code myself.
 
 # 🐦 Cassandra Birds Tracker
 
