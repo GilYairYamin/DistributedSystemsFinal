@@ -62,8 +62,8 @@ NUMBER_OF_TRACKING_CYCLES=2
 
 ## 🧩 Script 1: cassandraBirdsClient.py (Data Generator)
 
+This script simulates bird movement and writes GPS data into Cassandra.\
 Notice: each update cycle does an update *on all birds*. So if we have 10 birds and 2 cycles, it will do 20 updates overall.
-This script simulates bird movement and writes GPS data into Cassandra.
 
 ### Features
 - Creates keyspace and table if not existing  
@@ -89,8 +89,6 @@ Example log snippet:
 78 - Sending mutation message
 120 - Mutation applied
 ```
-
----
 
 ## 🧭 Script 2: cassandraBirdsTracker.py (Data Tracker)
 
