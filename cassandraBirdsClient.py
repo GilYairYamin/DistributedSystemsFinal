@@ -1,19 +1,25 @@
+import os
 import random
 import time
-from tqdm import tqdm
 from datetime import date, datetime
 
-from cassandra.cluster import Cluster, ResultSet
-from cassandra.cluster import Session
-
 from cassandra import ConsistencyLevel
+from cassandra.cluster import Cluster, ResultSet, Session
+from dotenv import load_dotenv
+from tqdm import tqdm
+
+load_dotenv()
+KEYSPACE = os.getenv("KEYSPACE")
+TABLE = os.getenv("TABLE")
+CONTACT_POINTS = os.getenv("CONTACT_POINTS").split(",")
+PORT = os.getenv("PORT")
+
+PERIOD_FOR_UPDATE_IN_SECONDS = os.getenv("PERIOD_FOR_UPDATE_IN_SECONDS")
+NUMBER_OF_UPDATE_CYCLES = os.getenv("NUMBER_OF_UPDATE_CYCLES")
+NUMBER_OF_BIRDS_TO_SIMULATE = os.getenv("NUMBER_OF_BIRDS_TO_SIMULATE")
 
 
-KEYSPACE = "trackbirds"
-TABLE = "birds_locations_by_date"
-
-
-def create_keyspace(session: Session, keyspace: str):
+def create_keyspace(session: Session, keyspace: str) -> ResultSet:
     cql_create_keyspace = f"""
 CREATE KEYSPACE IF NOT EXISTS {keyspace}
 WITH REPLICATION = {{
@@ -24,10 +30,7 @@ WITH REPLICATION = {{
     statement = session.prepare(cql_create_keyspace)
     statement.consistency_level = ConsistencyLevel.ALL
 
-    result: ResultSet = session.execute(statement, trace=True)
-    current_time = datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
-    with open(f"trace_create_keyspace_{current_time}.txt", "w+") as f:
-        f.write(str(result.get_query_trace()))
+    session.execute(statement, trace=True)
 
 
 def create_table(session: Session, table: str):
@@ -74,7 +77,7 @@ def insert_into(
     species: str,
     ts: str = None,
     trace: bool = False,
-) -> str:
+) -> ResultSet:
     cql_insert = f"""
 INSERT INTO {table}(
   bird_id,
@@ -98,11 +101,7 @@ VALUES (
         values.insert(2, ts)
     statement = session.prepare(cql_insert)
     statement.consistency_level = ConsistencyLevel.QUORUM
-
-    result: ResultSet = session.execute(statement, values, trace=trace)
-    if trace:
-        return result.get_query_trace()
-    return None
+    return session.execute(statement, values, trace=trace)
 
 
 def random_step(lat, lon, step_deg=0.01):
@@ -132,11 +131,11 @@ def simulate_birds(
     session: Session,
     table: str,
     number_of_birds: int = 10,
-    update_rate_in_seconds: float = 5,
-    number_of_updates: int = 20,
+    period_for_update_in_seconds: float = 5,
+    number_of_update_cycles: int = 20,
 ):
     bird_ids = [f"bird_{idx}" for idx in range(1, number_of_birds + 1)]
-    bird_to_trace = random.choice(bird_ids)
+    bird_to_trace = "bird_4"  # random.choice(bird_ids)
     species_options = [
         "American Robin",
         "American Crow",
@@ -158,9 +157,13 @@ def simulate_birds(
     current_time = datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
     trace_file = open(f"trace_insert_{current_time}.txt", "w+")
 
-    for _ in tqdm(range(number_of_updates)):
-        random.shuffle(birds_info)
+    for idx in tqdm(
+        range(number_of_update_cycles), desc="updating bird locations"
+    ):
+        if idx != 0:
+            time.sleep(period_for_update_in_seconds)
 
+        random.shuffle(birds_info)
         for bird in birds_info:
             current_date = date.today()
             bird["latitude"], bird["longitude"] = random_step(
@@ -178,29 +181,34 @@ def simulate_birds(
                 trace=True if bird["bird_id"] == bird_to_trace else False,
             )
 
-            if bird["bird_id"] is bird_to_trace:
-                trace_file.write(f"{result}\n")
+            if bird["bird_id"] == bird_to_trace:
+                trace = result.get_query_trace()
+                for e in trace.events:
+                    trace_file.write(f"{e.source_elapsed} - {e.description}\n")
+                trace_file.write("\n\n")
                 trace_file.flush()
 
-        time.sleep(update_rate_in_seconds)
+        time.sleep(period_for_update_in_seconds)
 
 
 def connect_to_cluster():
     cluster = Cluster(
-        contact_points=["localhost"],
-        port=9042,
+        contact_points=CONTACT_POINTS,
+        port=PORT,
     )
     return cluster, cluster.connect(KEYSPACE)
 
 
 def main():
     init_database()
-
     cluster, session = connect_to_cluster()
     simulate_birds(
-        session, TABLE, update_rate_in_seconds=20, number_of_updates=10
+        session,
+        TABLE,
+        number_of_birds=NUMBER_OF_BIRDS_TO_SIMULATE,
+        period_for_update_in_seconds=PERIOD_FOR_UPDATE_IN_SECONDS,
+        number_of_update_cycles=NUMBER_OF_UPDATE_CYCLES,
     )
-
     session.shutdown()
 
 
